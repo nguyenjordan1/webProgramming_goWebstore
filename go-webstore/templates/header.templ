@@ -1,0 +1,84 @@
+package templates
+
+templ Header() {
+    <header>
+        <div class="nav-container">
+            <ul class="nav">
+                <li><a href="/">Home</a></li>
+                <li><a href="/store">Store</a></li>
+            </ul>
+            <div id="role-buttons">
+            </div>
+        </div>
+
+        <h1>Go Webstore</h1>
+
+        <div class="user-info">
+            <p id="user-greeting">Welcome, Guest</p>
+            <p id="invalid"> </p>
+            <button id="logout-btn">Logout</button>
+        </div>
+    </header>
+
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        const email = getCookie('user_email');
+        console.log("Updating name", email);
+
+        if (email) {
+            fetch(`/get-user-info?email=${encodeURIComponent(email)}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Server response:", data);
+                    if (data.success) {
+                        const { fullName, role } = data;
+
+                        document.getElementById('user-greeting').textContent = `Welcome, ${fullName}`;
+                        document.getElementById('invalid').textContent = ''; 
+
+                        const roleButtonsDiv = document.getElementById('role-buttons');
+                        if (role >= 1) {
+                            const orderEntryButton = document.createElement('button');
+                            orderEntryButton.textContent = 'Order Entry';
+                            orderEntryButton.onclick = () => {
+                                window.location.href = '/OrderEntry';
+                            };
+                            roleButtonsDiv.appendChild(orderEntryButton);
+
+                            const adminButton = document.createElement('button');
+                            adminButton.textContent = 'Products';
+                            adminButton.onclick = () => {
+                                window.location.href = '/Products';
+                            };
+                            roleButtonsDiv.appendChild(adminButton);
+                        }
+                        if (role >= 2) {
+                            const adminButton = document.createElement('button');
+                            adminButton.textContent = 'Admin';
+                            adminButton.onclick = () => {
+                                window.location.href = '/Admin';
+                            };
+                            roleButtonsDiv.appendChild(adminButton);
+                        }
+                    } else {
+                        document.getElementById('invalid').textContent = 'Invalid email or password';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user info:', error);
+                    document.getElementById('invalid').textContent = 'An error occurred. Please try again.';
+                });
+        } else {
+            document.getElementById('invalid').textContent = 'No email found. Please log in.';
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            window.location.href = '/logout';
+        });
+    </script>
+}

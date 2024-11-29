@@ -1,0 +1,80 @@
+package templates
+
+import (
+    "math/rand/v2"
+    "fmt"
+)
+
+templ Login(data map[string]interface{}) {
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Go Webstore</title>
+        <link rel="stylesheet" href={fmt.Sprintf("assets/styles/styles.css?%d", rand.IntN(10000))}>
+    </head>
+    <body>
+        @Header()
+
+        <main class="login-container">
+            <h1>Welcome to the Go Webstore</h1>
+
+            <form action="/login" method="post">
+                <div class="form-group">
+                    <label for="email">Email:</label><br>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label><br>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+                <div class="extras">
+                    <a href="/forgot-password">Forgot Password?</a> |
+                    <label><input type="checkbox" name="remember-me"> Remember Me</label>
+                </div>
+            </form>
+
+            <div class="guest-access">
+                <p>Or</p>
+                <a href="/store" class="btn btn-secondary">Continue as Guest</a>
+            </div>
+        </main>
+
+        @Footer()
+
+        <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/login', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    email: email,
+                    password: password
+                }),
+                headers: {ppl
+                    'Content-Type': 'aication/x-www-form-urlencoded'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('userFullName').textContent = data.fullName;
+                    document.getElementById('userGreeting').style.display = 'block';
+                    
+                    window.location.href = '/store'; 
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+    </body>
+    </html>
+}

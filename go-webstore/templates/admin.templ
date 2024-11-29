@@ -1,0 +1,103 @@
+package templates
+
+import (
+    "fmt"
+    "time"
+    "go-store/types"
+    "math/rand/v2"
+)
+
+templ Admin (customers []types.Customer, orders []types.Order, products []types.Product) {
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Go Webstore</title>
+        <link rel="stylesheet" href={fmt.Sprintf("assets/styles/styles.css?%d", rand.IntN(10000))}>
+    </head>
+    <body>
+    @Header()
+    <h1> Customer </h1>
+    if len (customers) < 1 {
+        <p> No customers </p>
+    } else {
+        <table>
+            <thead>
+                <th> First name </th>
+                <th> Last name </th>
+                <th> Email </th>
+            </thead>
+            <tbody>
+                for _, customer := range customers {
+                    <tr>
+                    <td> { customer.FirstName} </td>
+                    <td> { customer.LastName} </td>
+                    <td> { customer.Email} </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <hr>
+    <h2> Orders </h2>
+    if len(orders) < 1 {
+        <p> No orders yet </p>
+    } else {
+        <table>
+            <thead>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Tax</th>
+                    <th>Donation</th>
+                    <th>Timestamp</th>
+            </thead>
+            <tbody>
+                for _, order := range orders {
+                    <tr>
+                        <td>{ fmt.Sprintf("%d", order.ID) }</td>
+                        <td>{ order.CustomerFirstName }</td> 
+                        <td>{ order.ProductName }</td>   
+                        <td>{ fmt.Sprintf("%d", order.Quantity) }</td>
+                        <td>{ fmt.Sprintf("%.2f", order.Price) }</td>
+                        <td>{ fmt.Sprintf("%.2f", order.Tax) }</td>
+                        <td>{ fmt.Sprintf("%.2f", order.Donation) }</td>
+                        <td>{ time.Unix(int64(order.Timestamp), 0).String() }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    <hr>
+    <h3> Products </h3>
+    if len(products) < 1 {
+        <p> No products yet </p>
+    } else {
+        <table>
+        <thead>
+            <th>Product Name</th>
+            <th>Image Name</th>
+            <th>In Stock</th>
+            <th>Product ID</th>
+            <th>Price</th>
+        </thead>
+        <tbody>
+            for _, product := range products {
+                <tr>
+                    <td>{ product.ProductName }</td>
+                    <td>{ product.ImageName }</td>
+                    <td>{ fmt.Sprintf("%d", product.InStock) }</td>
+                    <td>{ fmt.Sprintf("%d",product.ID) }</td>
+                    <td>{ fmt.Sprintf("%.2f", product.Price) }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    }
+    @Footer()
+    </body>
+    </html>
+
+}

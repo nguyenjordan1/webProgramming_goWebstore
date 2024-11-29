@@ -1,0 +1,194 @@
+package templates
+
+import (
+    "math/rand"
+    "fmt"
+    "go-store/types"
+)
+templ OrderEntry(products []types.Product) {
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Go Webstore</title>
+        <link rel="stylesheet" href={fmt.Sprintf("assets/styles/styles.css?%d", rand.Intn(10000))}>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+    </head>
+    <body>
+        @Header() 
+
+        <div class="container">
+            <div class="content">
+                <main>
+                    <form id="order-form">
+                        <fieldset>
+                            <legend>Personal Info</legend>
+                            <label for="fname">First name:</label><br>
+                            <input type="text" id="fname" name="fname" pattern="[A-Za-z\s']+" 
+                                title="Only letters, spaces, and apostrophes allowed" required><br>
+
+                            <label for="lname">Last name:</label><br>
+                            <input type="text" id="lname" name="lname" pattern="[A-Za-z\s']+" 
+                                title="Only letters, spaces, and apostrophes allowed" required><br>
+
+                            <label for="email">Email:</label><br>
+                            <input type="email" id="email" name="email" required><br>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend>Product Info</legend>
+                            <select name="product" id="product" onchange="showProductQuantity()">
+                                <option disabled selected> -- Select a Product -- </option>
+                                <option value="babyBottle" data-image="babybottle.jpg" data-stock="0">babyBottle - $5.00</option>
+                                <option value="diapers" data-image="diapers.jpg" data-stock="3">diapers - $30.00</option>
+                                <option value="pacifier" data-image="pacifier.jpg" data-stock="10">pacifier - $10.00</option>
+                            </select><br>
+
+                            <label for="available">Available:</label><br>
+                            <input type="text" id="available" readonly value="Select a product" class="available-field"><br>
+
+                            <label for="quantity">Quantity:</label><br>
+                            <input type="number" id="quantity" name="quantity" min="1" max="100" value="1" required><br>
+                        </fieldset>
+
+                        <button type="submit">Purchase</button>
+                        <button type="reset">Clear Fields</button>
+                    </form>
+                </main>
+                <aside>
+                    <h3>Customer Information</h3>
+                    <table id="customer-list" border="1" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Product</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Customer rows will be dynamically populated here -->
+                        </tbody>
+                    </table>
+                </aside>
+            </div>
+        </div>
+
+        @Footer() 
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const firstNameInput = document.getElementById('fname');
+                const lastNameInput = document.getElementById('lname');
+                const customerTable = document.getElementById('customer-list');
+                const customerTableBody = customerTable.querySelector('tbody');
+                let selectedRow = null;
+                let lastQuery = '';
+                let debounceTimer;
+
+                async function fetchCustomers(query) {
+                    if (query === lastQuery) return;
+                    lastQuery = query;
+
+                    try {
+                        const response = await fetch(`/get_customers?search=${encodeURIComponent(query)}`);
+                        if (!response.ok) throw new Error('Network response was not ok');
+
+                        const tableHTML = await response.text();
+                        customerTableBody.innerHTML = tableHTML.includes('<tr') ? tableHTML : '<tr><td colspan="3">No matches</td></tr>';
+                        customerTable.style.display = tableHTML.includes('<tr') ? 'table' : 'none';
+
+                        addRowClickHandlers();
+                    } catch (error) {
+                        console.error('Error fetching customers:', error);
+                        customerTableBody.innerHTML = '<tr><td colspan="3">No matches</td></tr>';
+                        customerTable.style.display = 'table';
+                    }
+                }
+
+                function addRowClickHandlers() {
+                    const rows = customerTableBody.querySelectorAll('tr');
+                    rows.forEach(row => {
+                        row.addEventListener('click', () => {
+                            if (selectedRow) {
+                                selectedRow.classList.remove('selected-row');
+                            }
+                            row.classList.add('selected-row');
+                            selectedRow = row;
+
+                            firstNameInput.value = row.cells[0].textContent;
+                            lastNameInput.value = row.cells[1].textContent;
+                            document.getElementById('email').value = row.cells[2].textContent;
+                        });
+                    });
+                }
+
+                [firstNameInput, lastNameInput].forEach(input => {
+                    input.addEventListener('keyup', () => {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => {
+                            const query = firstNameInput.value || lastNameInput.value;
+                            if (query) {
+                                fetchCustomers(query);
+                            } else {
+                                customerTable.style.display = 'none';
+                                customerTableBody.innerHTML = '';
+                            }
+                        }, 300);
+                    });
+                });
+
+                
+            });
+
+            function showProductQuantity() {
+                var selectedProduct = document.getElementById('product').value;  
+                if (selectedProduct) {  
+                    var xmlhttp = new XMLHttpRequest();  
+                    xmlhttp.onreadystatechange = function() {  
+                        if (this.readyState == 4 && this.status == 200) {  
+                            var data = JSON.parse(this.responseText);  
+                            document.getElementById('available').value = data.quantity !== null ? data.quantity : "Unavailable";  
+                        } else if (this.readyState == 4) {
+                            document.getElementById('available').value = "Unavailable";  
+                        }  
+                    };  
+                    xmlhttp.open("GET", "/get_product_quantity?product=" + encodeURIComponent(selectedProduct), true);  
+                    xmlhttp.send();  
+                } else {  
+                    document.getElementById('available').value = "Select a product";  
+                }
+            }
+            
+           $(document).ready(function() {
+                $("#order-form").submit(function(e) {
+                    e.preventDefault(); 
+                    const formData = {
+                        fname: $("#fname").val(),
+                        lname: $("#lname").val(),
+                        email: $("#email").val(),
+                        product: $("#product").val(),
+                        quantity: $("#quantity").val(),
+                        donation: $("input[name='donation']:checked").val() || 'no' 
+                    };
+                    const queryString = $.param(formData);
+
+                    $.ajax({
+                        url: '/process_purchase?' + queryString,
+                        type: 'GET',
+                        complete: function(response) {
+                            const confirmationMessage = `Order submitted for: ${response.responseJSON.firstName} ${response.responseJSON.lastName} ${response.responseJSON.quantity} x ${response.responseJSON.product} $${response.responseJSON.total.toFixed(2)}`;
+                            $("#confirmation").html(`<p>${confirmationMessage}</p>`);
+                            $("#order-form")[0].reset();
+                        }
+                    });
+
+                });
+        });
+
+
+
+
+        </script>
+
+    </body>
+    </html>
+}

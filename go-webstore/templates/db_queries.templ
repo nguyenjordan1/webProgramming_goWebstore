@@ -1,0 +1,99 @@
+package templates
+
+import (
+    "fmt"
+    "go-store/types"
+)
+templ DbQueries(customerResult types.CustomerResults, productResult types.ProductResults, orderResult types.OrderResults) {
+    <!-- Customer Information Table -->
+    <h2>Customer Information</h2>
+    <table>
+        <thead> 
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Email</th>
+        </thead>
+        <tbody>
+            for _, customer := range customerResult.Customers {
+                <tr>
+                    <td>{ customer.FirstName }</td>
+                    <td>{ customer.LastName }</td>  
+                    <td>{ customer.Email }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p>Total count: { fmt.Sprintf("%d", len(customerResult.Customers)) }</p>
+    <p>Customer 2 by ID: { customerResult.Customer2.Email }</p>
+    <p>Customer 3: { customerResult.Customer3 }</p>
+    <p>Customer by email: { customerResult.Customer4.Email }</p>
+    <p>Customer by email exists? { customerResult.Customer5Find }</p>
+    <p>Adding Customer to the database...</p>
+    <p>Added: { customerResult.Customer5.Email }</p>
+
+    <!-- Product Information Table -->
+    <h2>Product Information</h2>
+    <table>
+        <thead>
+            <th>Product Name</th>
+            <th>In Stock</th>
+            <th>Product ID</th>
+            <th>Price</th>
+        </thead>
+        <tbody>
+            for _, product := range productResult.Product {
+                <tr>
+                    <td>{ product.ProductName }</td>
+                    <td>{ fmt.Sprintf("%d", product.InStock) }</td>
+                    <td>{ fmt.Sprintf("%d",product.ID) }</td>
+                    <td>{ fmt.Sprintf("%.2f", product.Price) }</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <p>Total products: { fmt.Sprintf("%d", len(productResult.Product)) }</p>
+    <p> Selling 1 Pacifier</p>
+    <p>Quantity after selling: {fmt.Sprintf("%d", productResult.Product2.InStock)}</p>
+    <p> Selling 5 Baby bottles</p>
+    <p>Quantity after selling: {fmt.Sprintf("%d", productResult.Product3.InStock)}</p>
+
+    <!-- Order Information Table -->
+    <h2>Order Information</h2>
+    if len(orderResult.Order) == 0 {
+        <p>No orders yet.</p>
+    } else {
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Tax</th>
+                    <th>Donation</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                for _, order := range orderResult.Order {
+                <tr>
+                    <td>{ fmt.Sprintf("%d", order.ID) }</td>
+                    <td>{ order.CustomerFirstName }</td> 
+                    <td>{ order.ProductName }</td>   
+                    <td>{ fmt.Sprintf("%d", order.Quantity) }</td>
+                    <td>{ fmt.Sprintf("%.2f", order.Price) }</td>
+                    <td>{ fmt.Sprintf("%.2f", order.Tax) }</td>
+                    <td>{ fmt.Sprintf("%.2f", order.Donation) }</td>
+                    <td>{ fmt.Sprintf("%d", order.Timestamp) }</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    
+
+}
